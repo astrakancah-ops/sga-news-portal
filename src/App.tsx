@@ -164,25 +164,33 @@ export default function App() {
 
       // Find article by matching article slug/title/id and author slug
       const matched = articlesList.find(a => {
+        const aTitleSlug = createSlug(a.title);
+        const aArtSlug = a.slug ? createSlug(a.slug) : '';
         const titleMatch = (
           a.id === articleSeg ||
           a.slug === articleSeg ||
-          (a.slug && createSlug(a.slug) === targetArticleSlug) ||
-          createSlug(a.title) === targetArticleSlug ||
-          a.title.toLowerCase() === articleSeg.toLowerCase()
+          (a.slug && aArtSlug === targetArticleSlug) ||
+          aTitleSlug === targetArticleSlug ||
+          a.title.toLowerCase() === articleSeg.toLowerCase() ||
+          (targetArticleSlug.length > 8 && (aTitleSlug.includes(targetArticleSlug) || targetArticleSlug.includes(aTitleSlug) || (aArtSlug && aArtSlug.includes(targetArticleSlug))))
         );
         const authorMatch = (
           createSlug(a.authorName || '') === targetAuthorSlug ||
           a.authorId === authorSeg
         );
         return titleMatch && authorMatch;
-      }) || articlesList.find(a => (
-        a.id === articleSeg ||
-        a.slug === articleSeg ||
-        (a.slug && createSlug(a.slug) === targetArticleSlug) ||
-        createSlug(a.title) === targetArticleSlug ||
-        a.title.toLowerCase() === articleSeg.toLowerCase()
-      ));
+      }) || articlesList.find(a => {
+        const aTitleSlug = createSlug(a.title);
+        const aArtSlug = a.slug ? createSlug(a.slug) : '';
+        return (
+          a.id === articleSeg ||
+          a.slug === articleSeg ||
+          (a.slug && aArtSlug === targetArticleSlug) ||
+          aTitleSlug === targetArticleSlug ||
+          a.title.toLowerCase() === articleSeg.toLowerCase() ||
+          (targetArticleSlug.length > 8 && (aTitleSlug.includes(targetArticleSlug) || targetArticleSlug.includes(aArtSlug || aTitleSlug)))
+        );
+      });
 
       if (matched) {
         setSelectedArticleId(matched.id);
