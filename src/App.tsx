@@ -231,17 +231,33 @@ export default function App() {
         usr && usr.name && (
           usr.id === rawTitleOrId ||
           usr.name.toLowerCase() === rawTitleOrId.toLowerCase() ||
-          createSlug(usr.name) === slugOfPath
+          createSlug(usr.name) === slugOfPath ||
+          createSlug(usr.id) === slugOfPath
         )
       ) || INITIAL_USERS.find(usr =>
         usr.id === rawTitleOrId ||
         usr.name.toLowerCase() === rawTitleOrId.toLowerCase() ||
-        createSlug(usr.name) === slugOfPath
+        createSlug(usr.name) === slugOfPath ||
+        createSlug(usr.id) === slugOfPath
       );
 
       if (u) {
         setSelectedAuthorId(u.id);
         setSelectedAuthorName(u.name);
+        setActiveView('author-profile');
+        return;
+      }
+
+      // Check if any article was written by an author matching this slug/name
+      const artAuthor = articlesList.find(a => 
+        (a.authorName && createSlug(a.authorName) === slugOfPath) ||
+        (a.authorName && a.authorName.toLowerCase() === rawTitleOrId.toLowerCase()) ||
+        (a.authorId && (a.authorId === rawTitleOrId || createSlug(a.authorId) === slugOfPath))
+      );
+
+      if (artAuthor) {
+        setSelectedAuthorId(artAuthor.authorId);
+        setSelectedAuthorName(artAuthor.authorName);
         setActiveView('author-profile');
         return;
       }
@@ -256,7 +272,6 @@ export default function App() {
     const unsubscribeArticles = subscribeToArticles((updatedArticles) => {
       setArticles(updatedArticles);
       setIsLiveConnected(true);
-      resolveRoute(updatedArticles, users);
     });
 
     // Subscribe to Users Collection in Firestore
@@ -310,6 +325,11 @@ export default function App() {
       unsubscribeUsers();
     };
   }, []);
+
+  // Synchronize route whenever articles, users, or location pathname changes
+  useEffect(() => {
+    resolveRoute(articles, users);
+  }, [articles, users]);
 
   // Sync route on browser back/forward (popstate)
   useEffect(() => {
